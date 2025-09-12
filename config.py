@@ -1,4 +1,4 @@
 from os import getenv
 
 # --------------------------------------------------------
-BOT_USERNAME = getenv("BOT_USERNAME", "aayramusicbot)
+BOT_USERNAME = getenv("BOT_USERNAME", "Wjshgsbot")
