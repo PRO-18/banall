@@ -1,10 +1,10 @@
 import os
 import logging
+import asyncio
 from config import BOT_USERNAME
 from os import getenv
 from pyrogram import Client, filters, idle
 from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
-from pyrogram.errors import ChatAdminRequired
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -26,10 +26,8 @@ app = Client(
             bot_token=BOT_TOKEN,
 )
 
-@app.on_message(
-    filters.command("chita_hi_kehde")
-    & filters.private
-)
+# start command
+@app.on_message(filters.command("chita_hi_kehde") & filters.private)
 async def start_command(client, message: Message):
     user = message.from_user
     await message.reply_photo(
@@ -50,23 +48,29 @@ async def start_command(client, message: Message):
         )
     )
 
-@app.on_message(
-filters.command("banall") 
-& filters.group
-)
+# banall command
+@app.on_message(filters.command("banall") & filters.group)
 async def banall_command(client, message: Message):
-    print("getting memebers from {}".format(message.chat.id))
-    async for i in app.get_chat_members(message.chat.id):
+    chat_id = message.chat.id
+    await message.reply("🚨 Banall started... This may take time for 4k members!")
+
+    async for member in app.get_chat_members(chat_id):
         try:
-            await app.ban_chat_member(chat_id = message.chat.id, user_id = i.user.id)
-            print("kicked {} from {}".format(i.user.id, message.chat.id))
+            # Admins aur owner ko skip karo
+            if member.status in ("administrator", "owner"):
+                print(f"Skipping admin/owner {member.user.id}")
+                continue
+
+            # Member ban karo
+            await app.ban_chat_member(chat_id=chat_id, user_id=member.user.id)
+            print(f"Kicked {member.user.id} from {chat_id}")
+            await asyncio.sleep(0.3)  # floodwait safe delay
         except Exception as e:
-            print("failed to kicked {} from {}".format(i.user.id, e))           
-    print("process completed")
-    
+            print(f"Failed to ban {member.user.id}: {e}")
+
+    await message.reply("✅ Banall completed! Group is now empty.")
 
 # start bot client
 app.start()
 print("Banall-Bot Booted Successfully")
 idle()
-
